@@ -214,7 +214,7 @@ noscript {
 		<div id="rotate-hint">↻ Vend telefonen for den bedste oplevelse</div>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":65921840,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":65920624,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -282,7 +282,7 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 	// Delbart build (tools/web_share.sh): én pck pr. teksturformat, så hver fil holder sig under
 	// GitHub Pages' 100 MB-grænse. SA_PACKS udfyldes af scriptet; i almindelige builds er den null (én pck).
-	const SA_PACKS = {"s3tc":{"file":"index.pck","size":65921840},"etc2":{"file":"index_mobile.pck","size":47665184}};
+	const SA_PACKS = {"s3tc":{"file":"index.pck","size":65920624},"etc2":{"file":"index_mobile.pck","size":47663968}};
 	const override = {};
 	if (SA_PACKS) {
 		const forced = new URLSearchParams(window.location.search).get('pack');
