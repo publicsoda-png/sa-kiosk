@@ -214,7 +214,7 @@ noscript {
 		<div id="rotate-hint">↻ Vend telefonen for den bedste oplevelse</div>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":88258140,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":85453232,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -282,7 +282,7 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 	// Delbart build (tools/web_share.sh): én pck pr. teksturformat, så hver fil holder sig under
 	// GitHub Pages' 100 MB-grænse. SA_PACKS udfyldes af scriptet; i almindelige builds er den null (én pck).
-	const SA_PACKS = {"s3tc":{"file":"index.pck","size":88258140},"etc2":{"file":"index_mobile.pck","size":67117900}};
+	const SA_PACKS = {"s3tc": {"file": "index.pck", "size": 67254896, "extra": {"world": {"file": "world.pck", "size": 18215508}}}, "etc2": {"file": "index_mobile.pck", "size": 50504604, "extra": {"world": {"file": "world_mobile.pck", "size": 15331924}}}};
 	const override = {};
 	if (SA_PACKS) {
 		const forced = new URLSearchParams(window.location.search).get('pack');
@@ -303,7 +303,33 @@ const engine = new Engine(GODOT_CONFIG);
 		override.mainPack = p.file;
 		override.fileSizes = Object.assign({}, GODOT_CONFIG.fileSizes, { [p.file]: p.size });
 		console.log('SA pack: ' + fmt + ' (' + p.file + ', s3tc=' + s3tc + ', etc2=' + etc2 + ', mobil=' + mobile + ')');
+		// Ekstra pakker (tools/packs/): fx world.pck med gaden. Hentes i baggrunden efter start og mountes af
+		// shared/packs.gd (Packs.ensure), når spillet første gang skal bruge dem.
+		window.SA_EXTRA = p.extra || null;
 	}
+	window.SA_PK = {};
+	window.saFetchPack = function (name) {
+		const e = window.SA_EXTRA && window.SA_EXTRA[name];
+		if (!e || window.SA_PK[name]) return;
+		const st = window.SA_PK[name] = { pct: 0, buf: null, err: null };
+		fetch(e.file).then(async (r) => {
+			if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+			const out = new Uint8Array(e.size);
+			const rd = r.body.getReader();
+			let got = 0;
+			for (;;) {
+				const { done, value } = await rd.read();
+				if (done) break;
+				if (got + value.length > out.length) throw new Error('større end manifestet');
+				out.set(value, got);
+				got += value.length;
+				st.pct = Math.floor(100 * got / e.size);
+			}
+			if (got !== e.size) throw new Error('fik ' + got + ' af ' + e.size + ' bytes');
+			st.buf = out.buffer;
+			console.log('SA extra pack klar: ' + name + ' (' + got + ' bytes)');
+		}).catch((err) => { st.err = String(err); console.error('SA extra pack fejl: ' + name, err); });
+	};
 	engine.startGame({
 		'mainPack': override.mainPack,
 		'fileSizes': override.fileSizes,
@@ -314,7 +340,11 @@ const engine = new Engine(GODOT_CONFIG);
 				statusPct.textContent = pct < 100 ? pct + ' %' : 'Starter …';
 			}
 		},
-	}).then(hide, fail);
+	}).then(() => {
+		hide();
+		// gaden hentes mens man står i kiosken (efter hovedpakken, så de ikke deler båndbredden)
+		if (window.SA_EXTRA) for (const name in window.SA_EXTRA) window.saFetchPack(name);
+	}, fail);
 }());
 		</script>
 	</body>
